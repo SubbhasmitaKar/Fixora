@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
+import { Route as BookServiceIdRouteImport } from './routes/book.$serviceId'
 import { Route as ServicesIndexRouteImport } from './routes/services.index'
 import { Route as ServicesIdRouteImport } from './routes/services.$id'
 
@@ -30,6 +31,11 @@ const HowItWorksRoute = HowItWorksRouteImport.update({
   path: '/how-it-works',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BookServiceIdRoute = BookServiceIdRouteImport.update({
+  id: '/book/$serviceId',
+  path: '/book/$serviceId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ServicesIndexRoute = ServicesIndexRouteImport.update({
   id: '/services/',
   path: '/services/',
@@ -45,6 +51,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/book/$serviceId': typeof BookServiceIdRoute
   '/services/$id': typeof ServicesIdRoute
   '/services/': typeof ServicesIndexRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/book/$serviceId': typeof BookServiceIdRoute
   '/services/$id': typeof ServicesIdRoute
   '/services': typeof ServicesIndexRoute
 }
@@ -60,19 +68,33 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/book/$serviceId': typeof BookServiceIdRoute
   '/services/$id': typeof ServicesIdRoute
   '/services/': typeof ServicesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/how-it-works' | '/services/$id' | '/services/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/how-it-works'
+    | '/book/$serviceId'
+    | '/services/$id'
+    | '/services/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/how-it-works' | '/services/$id' | '/services'
+  to:
+    | '/'
+    | '/auth'
+    | '/how-it-works'
+    | '/book/$serviceId'
+    | '/services/$id'
+    | '/services'
   id:
     | '__root__'
     | '/'
     | '/auth'
     | '/how-it-works'
+    | '/book/$serviceId'
     | '/services/$id'
     | '/services/'
   fileRoutesById: FileRoutesById
@@ -81,6 +103,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   HowItWorksRoute: typeof HowItWorksRoute
+  BookServiceIdRoute: typeof BookServiceIdRoute
   ServicesIdRoute: typeof ServicesIdRoute
   ServicesIndexRoute: typeof ServicesIndexRoute
 }
@@ -108,6 +131,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HowItWorksRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/book/$serviceId': {
+      id: '/book/$serviceId'
+      path: '/book/$serviceId'
+      fullPath: '/book/$serviceId'
+      preLoaderRoute: typeof BookServiceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/services/': {
       id: '/services/'
       path: '/services'
@@ -129,6 +159,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   HowItWorksRoute: HowItWorksRoute,
+  BookServiceIdRoute: BookServiceIdRoute,
   ServicesIdRoute: ServicesIdRoute,
   ServicesIndexRoute: ServicesIndexRoute,
 }
