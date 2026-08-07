@@ -19,7 +19,7 @@ import { CATEGORY_NAMES, LOCATIONS } from "@/lib/fixora";
 import { ServiceCard, type ServiceRow } from "@/components/service-card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-type ServicesSearch = { category?: string };
+type ServicesSearch = { category?: string | undefined };
 
 export const Route = createFileRoute("/services/")({
   validateSearch: (search: Record<string, unknown>): ServicesSearch => ({
