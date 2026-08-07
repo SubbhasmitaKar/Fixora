@@ -71,9 +71,7 @@ export function SiteHeader() {
                 <Link to="/auth">Log in</Link>
               </Button>
               <Button asChild size="sm" className="gradient-brand border-0 text-primary-foreground glow">
-                <Link to="/auth" search={{ mode: "signup" }}>
-                  Get started
-                </Link>
+                <Link to="/auth">Get started</Link>
               </Button>
             </>
           )}
@@ -158,9 +156,7 @@ export function SiteFooter() {
               <Link to="/how-it-works">How it works</Link>
             </li>
             <li>
-              <Link to="/auth" search={{ mode: "signup" }}>
-                Become a provider
-              </Link>
+              <Link to="/auth">Become a provider</Link>
             </li>
           </ul>
         </div>
