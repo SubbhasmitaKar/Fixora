@@ -10,33 +10,141 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as HowItWorksRouteImport } from './routes/how-it-works'
+import { Route as ProviderRouteImport } from './routes/provider'
+import { Route as BookServiceIdRouteImport } from './routes/book.$serviceId'
+import { Route as ServicesIndexRouteImport } from './routes/services.index'
+import { Route as ServicesIdRouteImport } from './routes/services.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HowItWorksRoute = HowItWorksRouteImport.update({
+  id: '/how-it-works',
+  path: '/how-it-works',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProviderRoute = ProviderRouteImport.update({
+  id: '/provider',
+  path: '/provider',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookServiceIdRoute = BookServiceIdRouteImport.update({
+  id: '/book/$serviceId',
+  path: '/book/$serviceId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServicesIndexRoute = ServicesIndexRouteImport.update({
+  id: '/services/',
+  path: '/services/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServicesIdRoute = ServicesIdRouteImport.update({
+  id: '/services/$id',
+  path: '/services/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/auth': typeof AuthRoute
+  '/dashboard': typeof DashboardRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/provider': typeof ProviderRoute
+  '/book/$serviceId': typeof BookServiceIdRoute
+  '/services/$id': typeof ServicesIdRoute
+  '/services/': typeof ServicesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/auth': typeof AuthRoute
+  '/dashboard': typeof DashboardRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/provider': typeof ProviderRoute
+  '/book/$serviceId': typeof BookServiceIdRoute
+  '/services/$id': typeof ServicesIdRoute
+  '/services': typeof ServicesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/auth': typeof AuthRoute
+  '/dashboard': typeof DashboardRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/provider': typeof ProviderRoute
+  '/book/$serviceId': typeof BookServiceIdRoute
+  '/services/$id': typeof ServicesIdRoute
+  '/services/': typeof ServicesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/auth'
+    | '/dashboard'
+    | '/how-it-works'
+    | '/provider'
+    | '/book/$serviceId'
+    | '/services/$id'
+    | '/services/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/admin'
+    | '/auth'
+    | '/dashboard'
+    | '/how-it-works'
+    | '/provider'
+    | '/book/$serviceId'
+    | '/services/$id'
+    | '/services'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/auth'
+    | '/dashboard'
+    | '/how-it-works'
+    | '/provider'
+    | '/book/$serviceId'
+    | '/services/$id'
+    | '/services/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
+  AuthRoute: typeof AuthRoute
+  DashboardRoute: typeof DashboardRoute
+  HowItWorksRoute: typeof HowItWorksRoute
+  ProviderRoute: typeof ProviderRoute
+  BookServiceIdRoute: typeof BookServiceIdRoute
+  ServicesIdRoute: typeof ServicesIdRoute
+  ServicesIndexRoute: typeof ServicesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,22 +156,76 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/how-it-works': {
+      id: '/how-it-works'
+      path: '/how-it-works'
+      fullPath: '/how-it-works'
+      preLoaderRoute: typeof HowItWorksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/provider': {
+      id: '/provider'
+      path: '/provider'
+      fullPath: '/provider'
+      preLoaderRoute: typeof ProviderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/book/$serviceId': {
+      id: '/book/$serviceId'
+      path: '/book/$serviceId'
+      fullPath: '/book/$serviceId'
+      preLoaderRoute: typeof BookServiceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/services/': {
+      id: '/services/'
+      path: '/services'
+      fullPath: '/services/'
+      preLoaderRoute: typeof ServicesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/services/$id': {
+      id: '/services/$id'
+      path: '/services/$id'
+      fullPath: '/services/$id'
+      preLoaderRoute: typeof ServicesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
+  AuthRoute: AuthRoute,
+  DashboardRoute: DashboardRoute,
+  HowItWorksRoute: HowItWorksRoute,
+  ProviderRoute: ProviderRoute,
+  BookServiceIdRoute: BookServiceIdRoute,
+  ServicesIdRoute: ServicesIdRoute,
+  ServicesIndexRoute: ServicesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
