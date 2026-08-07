@@ -137,8 +137,14 @@ function LoginForm() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const parsedEmail = emailSchema.safeParse(email);
-    if (!parsedEmail.success) return toast.error(parsedEmail.error.issues[0]?.message);
-    if (!password) return toast.error("Enter your password");
+    if (!parsedEmail.success) {
+      toast.error(parsedEmail.error.issues[0]?.message);
+      return;
+    }
+    if (!password) {
+      toast.error("Enter your password");
+      return;
+    }
 
     setBusy(true);
     const { error } = await supabase.auth.signInWithPassword({
@@ -146,7 +152,10 @@ function LoginForm() {
       password,
     });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Welcome back!");
   }
 
@@ -196,11 +205,20 @@ function SignupForm() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const parsedName = nameSchema.safeParse(name);
-    if (!parsedName.success) return toast.error(parsedName.error.issues[0]?.message);
+    if (!parsedName.success) {
+      toast.error(parsedName.error.issues[0]?.message);
+      return;
+    }
     const parsedEmail = emailSchema.safeParse(email);
-    if (!parsedEmail.success) return toast.error(parsedEmail.error.issues[0]?.message);
+    if (!parsedEmail.success) {
+      toast.error(parsedEmail.error.issues[0]?.message);
+      return;
+    }
     const parsedPassword = passwordSchema.safeParse(password);
-    if (!parsedPassword.success) return toast.error(parsedPassword.error.issues[0]?.message);
+    if (!parsedPassword.success) {
+      toast.error(parsedPassword.error.issues[0]?.message);
+      return;
+    }
 
     setBusy(true);
     const { data, error } = await supabase.auth.signUp({
@@ -212,7 +230,10 @@ function SignupForm() {
       },
     });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     if (!data.session) {
       setSent(true);
       toast.success("Check your email to confirm your account");
