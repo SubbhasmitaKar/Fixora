@@ -19,46 +19,67 @@ export type Database = {
           booking_date: string
           commission: number
           created_at: string
+          eta_minutes: number | null
           id: string
           notes: string | null
           price: number
           provider_earnings: number
           provider_id: string | null
+          provider_lat: number | null
+          provider_lng: number | null
           service_id: string
+          slot_id: string | null
           status: string
           time_slot: string
+          tracking_active: boolean
           updated_at: string
           user_id: string
+          user_lat: number | null
+          user_lng: number | null
         }
         Insert: {
           booking_date: string
           commission?: number
           created_at?: string
+          eta_minutes?: number | null
           id?: string
           notes?: string | null
           price?: number
           provider_earnings?: number
           provider_id?: string | null
+          provider_lat?: number | null
+          provider_lng?: number | null
           service_id: string
+          slot_id?: string | null
           status?: string
           time_slot: string
+          tracking_active?: boolean
           updated_at?: string
           user_id: string
+          user_lat?: number | null
+          user_lng?: number | null
         }
         Update: {
           booking_date?: string
           commission?: number
           created_at?: string
+          eta_minutes?: number | null
           id?: string
           notes?: string | null
           price?: number
           provider_earnings?: number
           provider_id?: string | null
+          provider_lat?: number | null
+          provider_lng?: number | null
           service_id?: string
+          slot_id?: string | null
           status?: string
           time_slot?: string
+          tracking_active?: boolean
           updated_at?: string
           user_id?: string
+          user_lat?: number | null
+          user_lng?: number | null
         }
         Relationships: [
           {
@@ -66,6 +87,13 @@ export type Database = {
             columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "provider_slots"
             referencedColumns: ["id"]
           },
         ]
@@ -94,6 +122,42 @@ export type Database = {
           location?: string
           name?: string
           phone?: string | null
+        }
+        Relationships: []
+      }
+      provider_slots: {
+        Row: {
+          booking_id: string | null
+          created_at: string
+          end_time: string
+          id: string
+          provider_id: string
+          slot_date: string
+          start_time: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string
+          end_time: string
+          id?: string
+          provider_id: string
+          slot_date: string
+          start_time: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string
+          end_time?: string
+          id?: string
+          provider_id?: string
+          slot_date?: string
+          start_time?: string
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }

@@ -17,6 +17,7 @@ export type ServiceRow = {
   bookings_count: number;
   featured: boolean;
   provider_name: string;
+  provider_id?: string | null;
 };
 
 export function ServiceCard({ service }: { service: ServiceRow }) {
