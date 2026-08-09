@@ -1,16 +1,17 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, CalendarDays, Clock, Loader2 } from "lucide-react";
+import { ArrowLeft, CalendarDays, Clock, Loader2, LocateFixed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
-import { COMMISSION_RATE, TIME_SLOTS, formatCurrency } from "@/lib/fixora";
+import { COMMISSION_RATE, formatCurrency } from "@/lib/fixora";
+import { slotLabel, todayISO, upcomingDates, type SlotRow } from "@/lib/slots";
+import { DateStrip, SlotPicker } from "@/components/slot-picker";
 import { useAuth } from "@/lib/auth";
 import { RequireRole } from "@/components/require-role";
 import type { ServiceRow } from "@/components/service-card";
@@ -22,10 +23,10 @@ export const Route = createFileRoute("/book/$serviceId")({
       {
         name: "description",
         content:
-          "Pick a date and time slot, review the price breakdown and confirm your Fixora service booking.",
+          "Pick a live slot from the provider's real availability, review the price breakdown and confirm your Fixora booking.",
       },
       { property: "og:title", content: "Confirm Your Booking — Fixora" },
-      { property: "og:description", content: "Choose a slot and confirm your local service booking." },
+      { property: "og:description", content: "Choose a live slot and confirm your local service booking." },
     ],
   }),
   component: () => (
@@ -35,19 +36,17 @@ export const Route = createFileRoute("/book/$serviceId")({
   ),
 });
 
-function todayISO() {
-  return new Date().toISOString().slice(0, 10);
-}
-
 function BookingPage() {
   const { serviceId } = Route.useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  const dates = useMemo(() => upcomingDates(10), []);
   const [date, setDate] = useState(todayISO());
-  const [slot, setSlot] = useState<string | null>(null);
+  const [slot, setSlot] = useState<SlotRow | null>(null);
   const [notes, setNotes] = useState("");
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   const { data: service } = useQuery({
     queryKey: ["service", serviceId],
@@ -62,23 +61,64 @@ function BookingPage() {
     },
   });
 
-  const { data: takenSlots } = useQuery({
-    queryKey: ["taken-slots", serviceId, date],
+  const providerId = service?.provider_id ?? null;
+
+  const { data: slots } = useQuery({
+    queryKey: ["slots", providerId, date],
+    enabled: Boolean(providerId && date),
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("bookings")
-        .select("time_slot")
-        .eq("service_id", serviceId)
-        .eq("booking_date", date)
-        .in("status", ["pending", "accepted", "completed"]);
+        .from("provider_slots")
+        .select("id, provider_id, slot_date, start_time, end_time, status, booking_id")
+        .eq("provider_id", providerId!)
+        .eq("slot_date", date)
+        .order("start_time");
       if (error) throw error;
-      return (data ?? []).map((b) => b.time_slot);
+      return data as SlotRow[];
     },
-    enabled: Boolean(date),
   });
+
+  // Live availability — a slot booked by someone else disappears instantly.
+  useEffect(() => {
+    if (!providerId) return;
+    const channel = supabase
+      .channel(`slots-${providerId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "provider_slots", filter: `provider_id=eq.${providerId}` },
+        () => {
+          void queryClient.invalidateQueries({ queryKey: ["slots", providerId] });
+        },
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [providerId, queryClient]);
+
+  useEffect(() => {
+    if (slot && !(slots ?? []).some((s) => s.id === slot.id && s.status === "available")) {
+      setSlot(null);
+    }
+  }, [slots, slot]);
 
   const price = Number(service?.price ?? 0);
   const commission = useMemo(() => Math.round(price * COMMISSION_RATE), [price]);
+
+  const shareLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("Location isn't supported on this device");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        toast.success("Location saved — you'll get live tracking");
+      },
+      () => toast.error("Couldn't get your location. You can still book."),
+      { enableHighAccuracy: true, timeout: 8000 },
+    );
+  };
 
   const createBooking = useMutation({
     mutationFn: async () => {
@@ -87,18 +127,23 @@ function BookingPage() {
       const { error } = await supabase.from("bookings").insert({
         user_id: user.id,
         service_id: serviceId,
-        booking_date: date,
-        time_slot: slot,
+        slot_id: slot.id,
+        booking_date: slot.slot_date,
+        time_slot: slotLabel(slot),
         notes: notes.trim().slice(0, 500) || null,
+        user_lat: coords?.lat ?? null,
+        user_lng: coords?.lng ?? null,
       });
       if (error) {
-        if (error.code === "23505") throw new Error("That slot was just taken. Pick another one.");
+        if (error.code === "23505" || /already booked/i.test(error.message))
+          throw new Error("Slot already booked — choose another time.");
         throw error;
       }
     },
     onSuccess: () => {
       toast.success("Booking requested — the provider will confirm shortly");
       void queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      void queryClient.invalidateQueries({ queryKey: ["slots"] });
       void navigate({ to: "/dashboard" });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -123,17 +168,15 @@ function BookingPage() {
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_320px]">
         <Card className="glass rounded-2xl p-6">
-          <div className="space-y-2">
-            <Label htmlFor="date" className="flex items-center gap-2">
-              <CalendarDays className="size-4" /> Select a date
-            </Label>
-            <Input
-              id="date"
-              type="date"
-              min={todayISO()}
+          <Label className="flex items-center gap-2">
+            <CalendarDays className="size-4" /> Select a date
+          </Label>
+          <div className="mt-3">
+            <DateStrip
+              dates={dates}
               value={date}
-              onChange={(e) => {
-                setDate(e.target.value);
+              onChange={(d) => {
+                setDate(d);
                 setSlot(null);
               }}
             />
@@ -144,32 +187,22 @@ function BookingPage() {
           <Label className="flex items-center gap-2">
             <Clock className="size-4" /> Select a time slot
           </Label>
-          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {TIME_SLOTS.map((s) => {
-              const taken = (takenSlots ?? []).includes(s);
-              const selected = slot === s;
-              return (
-                <button
-                  key={s}
-                  type="button"
-                  disabled={taken}
-                  onClick={() => setSlot(s)}
-                  className={
-                    "rounded-xl border p-3 text-sm font-medium transition-colors " +
-                    (taken
-                      ? "cursor-not-allowed border-border/50 text-muted-foreground/50 line-through"
-                      : selected
-                        ? "border-primary bg-primary/10"
-                        : "border-border hover:border-primary/50")
-                  }
-                >
-                  {s}
-                </button>
-              );
-            })}
+          <div className="mt-3">
+            {providerId ? (
+              <SlotPicker
+                slots={slots ?? []}
+                selectedId={slot?.id ?? null}
+                onSelect={setSlot}
+                emptyMessage="No slots opened for this date. Try another day."
+              />
+            ) : (
+              <p className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+                This provider hasn't published live availability yet.
+              </p>
+            )}
           </div>
           <p className="mt-3 text-xs text-muted-foreground">
-            Struck-through slots are already booked — Fixora blocks overlapping bookings.
+            Availability updates live — booked slots disappear the moment someone takes them.
           </p>
 
           <Separator className="my-6" />
@@ -185,6 +218,11 @@ function BookingPage() {
               placeholder="Flat number, landmark or a short description of the issue…"
             />
           </div>
+
+          <Button variant="outline" className="mt-4 w-full" onClick={shareLocation}>
+            <LocateFixed className="size-4" />
+            {coords ? "Location shared for live tracking" : "Share my location for live tracking"}
+          </Button>
         </Card>
 
         <Card className="glass h-fit rounded-2xl p-6">
@@ -206,7 +244,8 @@ function BookingPage() {
           </dl>
 
           <div className="mt-5 rounded-xl bg-secondary p-3 text-xs text-secondary-foreground">
-            {date ? new Date(date).toDateString() : "No date"} · {slot ?? "No slot selected"}
+            {new Date(`${date}T00:00:00`).toDateString()} ·{" "}
+            {slot ? slotLabel(slot) : "No slot selected"}
           </div>
 
           <Button
@@ -219,7 +258,7 @@ function BookingPage() {
             Confirm booking
           </Button>
           <p className="mt-3 text-center text-xs text-muted-foreground">
-            Pay after the job is done. Cancel free while pending.
+            Pay after the job is done. Reschedule anytime while pending.
           </p>
         </Card>
       </div>
