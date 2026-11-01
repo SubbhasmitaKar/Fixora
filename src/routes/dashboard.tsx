@@ -33,7 +33,10 @@ export const Route = createFileRoute("/dashboard")({
           "Track your Fixora bookings live, reschedule to any open slot and follow your provider on the map.",
       },
       { property: "og:title", content: "My Bookings — Fixora Dashboard" },
-      { property: "og:description", content: "Your bookings, rescheduling and live provider tracking." },
+      {
+        property: "og:description",
+        content: "Your bookings, rescheduling and live provider tracking.",
+      },
     ],
   }),
   component: () => (
@@ -94,7 +97,10 @@ function UserDashboard() {
 
   const cancel = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("bookings").update({ status: "cancelled" }).eq("id", id);
+      const { error } = await supabase
+        .from("bookings")
+        .update({ status: "cancelled" })
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -120,9 +126,19 @@ function UserDashboard() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Total bookings" value={String(rows.length)} icon={CalendarCheck} />
-        <StatCard label="Upcoming" value={String(upcoming.length)} hint="Pending or accepted" icon={Clock} />
+        <StatCard
+          label="Upcoming"
+          value={String(upcoming.length)}
+          hint="Pending or accepted"
+          icon={Clock}
+        />
         <StatCard label="Completed" value={String(completed.length)} icon={Star} />
-        <StatCard label="Total spend" value={formatCurrency(spend)} hint="Completed jobs only" icon={IndianRupee} />
+        <StatCard
+          label="Total spend"
+          value={formatCurrency(spend)}
+          hint="Completed jobs only"
+          icon={IndianRupee}
+        />
       </div>
 
       <h2 className="mt-10 text-xl font-bold">Upcoming bookings</h2>
@@ -180,9 +196,7 @@ function BookingCard({
             {booking.services?.provider_name} · {booking.services?.location} ·{" "}
             {new Date(`${booking.booking_date}T00:00:00`).toDateString()} · {booking.time_slot}
           </p>
-          {booking.notes && (
-            <p className="mt-2 text-sm text-muted-foreground">“{booking.notes}”</p>
-          )}
+          {booking.notes && <p className="mt-2 text-sm text-muted-foreground">“{booking.notes}”</p>}
           {booking.status === "accepted" && !live.tracking_active && (
             <p className="mt-2 text-xs font-medium text-primary">
               Provider accepted — tracking starts when they head out.
@@ -203,9 +217,7 @@ function BookingCard({
               </Link>
             </Button>
           )}
-          {canChange && booking.provider_id && (
-            <RescheduleDialog booking={booking} />
-          )}
+          {canChange && booking.provider_id && <RescheduleDialog booking={booking} />}
           {canChange && onCancel && (
             <Button size="sm" variant="outline" onClick={onCancel}>
               <X className="size-4" /> Cancel
@@ -233,7 +245,9 @@ function RescheduleDialog({ booking }: { booking: BookingWithService }) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const dates = useMemo(() => upcomingDates(10), []);
-  const [date, setDate] = useState(booking.booking_date >= todayISO() ? booking.booking_date : todayISO());
+  const [date, setDate] = useState(
+    booking.booking_date >= todayISO() ? booking.booking_date : todayISO(),
+  );
   const [selected, setSelected] = useState<SlotRow | null>(null);
 
   const { data: slots } = useQuery({
@@ -251,7 +265,9 @@ function RescheduleDialog({ booking }: { booking: BookingWithService }) {
     },
   });
 
-  const available = (slots ?? []).filter((s) => s.status === "available" || s.id === booking.slot_id);
+  const available = (slots ?? []).filter(
+    (s) => s.status === "available" || s.id === booking.slot_id,
+  );
 
   const reschedule = useMutation({
     mutationFn: async () => {
@@ -290,7 +306,14 @@ function RescheduleDialog({ booking }: { booking: BookingWithService }) {
             Only open slots are shown. Your current slot frees up automatically.
           </DialogDescription>
         </DialogHeader>
-        <DateStrip dates={dates} value={date} onChange={(d) => { setDate(d); setSelected(null); }} />
+        <DateStrip
+          dates={dates}
+          value={date}
+          onChange={(d) => {
+            setDate(d);
+            setSelected(null);
+          }}
+        />
         <SlotPicker
           slots={available}
           selectedId={selected?.id ?? null}

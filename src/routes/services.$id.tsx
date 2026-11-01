@@ -53,7 +53,11 @@ function ServiceDetail() {
   const { data: service, isLoading } = useQuery({
     queryKey: ["service", id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("services").select("*").eq("id", id).maybeSingle();
+      const { data, error } = await supabase
+        .from("services")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
       if (error) throw error;
       return data as ServiceRow | null;
     },
@@ -97,7 +101,9 @@ function ServiceDetail() {
   });
 
   if (isLoading) {
-    return <div className="mx-auto max-w-5xl px-4 py-20 text-muted-foreground">Loading service…</div>;
+    return (
+      <div className="mx-auto max-w-5xl px-4 py-20 text-muted-foreground">Loading service…</div>
+    );
   }
 
   if (!service) {

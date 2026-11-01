@@ -19,7 +19,8 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "Fixora — Book Trusted Local Services Instantly" },
       {
         property: "og:description",
-        content: "A local services marketplace with verified providers, instant booking and live status tracking.",
+        content:
+          "A local services marketplace with verified providers, instant booking and live status tracking.",
       },
     ],
   }),
@@ -57,8 +58,8 @@ function Home() {
               Book Trusted Services <span className="gradient-text">Instantly</span>
             </h1>
             <p className="mt-5 max-w-xl text-base text-muted-foreground sm:text-lg">
-              Electricians, plumbers, tutors, beauticians and more — compare real ratings,
-              lock a time slot and track your booking from request to completion.
+              Electricians, plumbers, tutors, beauticians and more — compare real ratings, lock a
+              time slot and track your booking from request to completion.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Button

@@ -264,23 +264,20 @@ Admin:
 
 The application should simulate a real startup product (Fixora), demonstrating strong UI/UX, business logic, scalability, and monetization potential. It should be suitable for academic evaluation and future commercial expansion.
 
-This project was built with [Lovable](https://lovable.dev).
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/7b645ded-8ea6-48aa-bc8e-c4b3e7be6513).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
 ## Development
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+Install Node.js and npm, copy `.env.example` to `.env`, and set the Supabase
+publishable key for the configured project. Keep `SUPABASE_SERVICE_ROLE_KEY`
+server-only; never add a `VITE_` prefix to it. Then install dependencies and
+start the development server:
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
+cp .env.example .env
+npm install
 npm run dev
 ```
+
+Use `npm run build` to create a production build and `npm run lint` to check the
+codebase. For deployment, configure the same environment variables in the
+hosting provider and add the deployed site URL to Supabase's allowed
+authentication redirect URLs.

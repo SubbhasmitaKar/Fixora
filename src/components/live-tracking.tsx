@@ -97,10 +97,21 @@ export function LiveTrackingMap({
 
   return (
     <div className="overflow-hidden rounded-2xl border border-border">
-      <svg viewBox="0 0 100 100" className="h-56 w-full bg-secondary" role="img" aria-label="Live provider tracking map">
+      <svg
+        viewBox="0 0 100 100"
+        className="h-56 w-full bg-secondary"
+        role="img"
+        aria-label="Live provider tracking map"
+      >
         <defs>
           <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-            <path d="M10 0H0V10" fill="none" stroke="currentColor" strokeWidth="0.3" className="text-border" />
+            <path
+              d="M10 0H0V10"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="0.3"
+              className="text-border"
+            />
           </pattern>
         </defs>
         <rect width="100" height="100" fill="url(#grid)" />

@@ -70,7 +70,11 @@ export function SiteHeader() {
               <Button asChild variant="ghost" size="sm">
                 <Link to="/auth">Log in</Link>
               </Button>
-              <Button asChild size="sm" className="gradient-brand border-0 text-primary-foreground glow">
+              <Button
+                asChild
+                size="sm"
+                className="gradient-brand border-0 text-primary-foreground glow"
+              >
                 <Link to="/auth">Get started</Link>
               </Button>
             </>
@@ -142,8 +146,8 @@ export function SiteFooter() {
             <span className="font-display text-lg font-bold">Fixora</span>
           </div>
           <p className="mt-3 max-w-sm text-sm text-muted-foreground">
-            A marketplace connecting households with verified local professionals — booked,
-            tracked and paid for in one place.
+            A marketplace connecting households with verified local professionals — booked, tracked
+            and paid for in one place.
           </p>
         </div>
         <div>

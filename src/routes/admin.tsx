@@ -13,7 +13,8 @@ export const Route = createFileRoute("/admin")({
       { title: "Admin Analytics — Fixora" },
       {
         name: "description",
-        content: "Platform-wide analytics: users, listings, bookings and commission revenue on Fixora.",
+        content:
+          "Platform-wide analytics: users, listings, bookings and commission revenue on Fixora.",
       },
       { property: "og:title", content: "Admin Analytics — Fixora" },
       { property: "og:description", content: "Monitor Fixora marketplace health and revenue." },
@@ -42,7 +43,9 @@ function AdminDashboard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bookings")
-        .select("id, booking_date, time_slot, status, price, commission, services(title, provider_name)")
+        .select(
+          "id, booking_date, time_slot, status, price, commission, services(title, provider_name)",
+        )
         .order("created_at", { ascending: false })
         .limit(50);
       if (error) throw error;
@@ -68,13 +71,26 @@ function AdminDashboard() {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
-      <DashboardHeader title="Admin analytics" subtitle="Marketplace health, activity and revenue." />
+      <DashboardHeader
+        title="Admin analytics"
+        subtitle="Marketplace health, activity and revenue."
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Users" value={String(counts?.users ?? 0)} icon={Users} />
         <StatCard label="Listings" value={String(counts?.services ?? 0)} icon={BriefcaseBusiness} />
-        <StatCard label="Bookings" value={String(rows.length)} hint="Latest 50" icon={CalendarCheck} />
-        <StatCard label="Commission revenue" value={formatCurrency(revenue)} hint="Completed jobs" icon={IndianRupee} />
+        <StatCard
+          label="Bookings"
+          value={String(rows.length)}
+          hint="Latest 50"
+          icon={CalendarCheck}
+        />
+        <StatCard
+          label="Commission revenue"
+          value={formatCurrency(revenue)}
+          hint="Completed jobs"
+          icon={IndianRupee}
+        />
       </div>
 
       <h2 className="mt-10 text-xl font-bold">Recent bookings</h2>
@@ -93,7 +109,8 @@ function AdminDashboard() {
                   <StatusBadge status={b.status} />
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {b.services?.provider_name} · {new Date(b.booking_date).toDateString()} · {b.time_slot}
+                  {b.services?.provider_name} · {new Date(b.booking_date).toDateString()} ·{" "}
+                  {b.time_slot}
                 </p>
               </div>
               <div className="text-right text-sm">

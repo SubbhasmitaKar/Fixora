@@ -43,13 +43,7 @@ export function StatCard({
   );
 }
 
-export function DashboardHeader({
-  title,
-  subtitle,
-}: {
-  title: string;
-  subtitle: string;
-}) {
+export function DashboardHeader({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <div className="mb-8">
       <h1 className="text-3xl font-extrabold sm:text-4xl">{title}</h1>

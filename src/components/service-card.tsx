@@ -52,7 +52,9 @@ export function ServiceCard({ service }: { service: ServiceRow }) {
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
             <Star className="size-3.5 fill-warning text-warning" />
-            <span className="font-semibold text-foreground">{Number(service.rating).toFixed(1)}</span>
+            <span className="font-semibold text-foreground">
+              {Number(service.rating).toFixed(1)}
+            </span>
             ({service.review_count})
           </span>
           <span className="flex items-center gap-1">

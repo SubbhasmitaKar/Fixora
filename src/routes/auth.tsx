@@ -16,7 +16,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/lib/auth";
 import { LOCATIONS } from "@/lib/fixora";
 
@@ -102,16 +101,16 @@ function GoogleButton() {
 
   async function signInWithGoogle() {
     setBusy(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin },
     });
-    if (result.error) {
-      toast.error("Google sign-in failed. Please try email instead.");
+    if (error || !data.url) {
+      toast.error(error?.message ?? "Google sign-in could not be started.");
       setBusy(false);
       return;
     }
-    if (result.redirected) return;
-    window.location.href = "/dashboard";
+    window.location.assign(data.url);
   }
 
   return (

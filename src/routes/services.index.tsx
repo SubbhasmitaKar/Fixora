@@ -36,7 +36,8 @@ export const Route = createFileRoute("/services/")({
       { property: "og:title", content: "Browse Local Services — Fixora" },
       {
         property: "og:description",
-        content: "Filter hundreds of verified local professionals by category, city, price and rating.",
+        content:
+          "Filter hundreds of verified local professionals by category, city, price and rating.",
       },
     ],
   }),
@@ -65,10 +66,7 @@ function ServicesPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["services", "list"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("services")
-        .select("*")
-        .eq("active", true);
+      const { data, error } = await supabase.from("services").select("*").eq("active", true);
       if (error) throw error;
       return data as ServiceRow[];
     },
@@ -82,7 +80,8 @@ function ServicesPage() {
       if (Number(s.rating) < Number(minRating)) return false;
       if (q.trim()) {
         const needle = q.toLowerCase();
-        const hay = `${s.title} ${s.description} ${s.category} ${s.provider_name} ${s.location}`.toLowerCase();
+        const hay =
+          `${s.title} ${s.description} ${s.category} ${s.provider_name} ${s.location}`.toLowerCase();
         if (!hay.includes(needle)) return false;
       }
       return true;

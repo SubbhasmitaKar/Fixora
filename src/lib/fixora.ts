@@ -29,15 +29,7 @@ export const CATEGORIES: Category[] = [
 
 export const CATEGORY_NAMES = CATEGORIES.map((c) => c.name);
 
-export const LOCATIONS = [
-  "Bengaluru",
-  "Chennai",
-  "Delhi",
-  "Hyderabad",
-  "Jaipur",
-  "Mumbai",
-  "Pune",
-];
+export const LOCATIONS = ["Bengaluru", "Chennai", "Delhi", "Hyderabad", "Jaipur", "Mumbai", "Pune"];
 
 export const TIME_SLOTS = [
   "08:00 - 10:00",

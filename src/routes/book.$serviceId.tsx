@@ -26,7 +26,10 @@ export const Route = createFileRoute("/book/$serviceId")({
           "Pick a live slot from the provider's real availability, review the price breakdown and confirm your Fixora booking.",
       },
       { property: "og:title", content: "Confirm Your Booking — Fixora" },
-      { property: "og:description", content: "Choose a live slot and confirm your local service booking." },
+      {
+        property: "og:description",
+        content: "Choose a live slot and confirm your local service booking.",
+      },
     ],
   }),
   component: () => (
@@ -85,7 +88,12 @@ function BookingPage() {
       .channel(`slots-${providerId}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "provider_slots", filter: `provider_id=eq.${providerId}` },
+        {
+          event: "*",
+          schema: "public",
+          table: "provider_slots",
+          filter: `provider_id=eq.${providerId}`,
+        },
         () => {
           void queryClient.invalidateQueries({ queryKey: ["slots", providerId] });
         },

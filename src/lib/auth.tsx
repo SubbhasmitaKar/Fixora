@@ -32,7 +32,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadDetails = useCallback(async (userId: string) => {
     const [{ data: p }, { data: r }] = await Promise.all([
-      supabase.from("profiles").select("id, name, email, location, phone").eq("id", userId).maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("id, name, email, location, phone")
+        .eq("id", userId)
+        .maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", userId).limit(1).maybeSingle(),
     ]);
     setProfile((p as Profile) ?? null);

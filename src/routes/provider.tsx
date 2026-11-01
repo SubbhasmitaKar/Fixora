@@ -178,15 +178,29 @@ function ProviderDashboard() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Live listings" value={String(services?.length ?? 0)} icon={BriefcaseBusiness} />
+        <StatCard
+          label="Live listings"
+          value={String(services?.length ?? 0)}
+          icon={BriefcaseBusiness}
+        />
         <StatCard
           label="Upcoming bookings"
           value={String(upcoming.length)}
           hint={`${pending.length} awaiting action`}
           icon={CalendarCheck}
         />
-        <StatCard label="Net earnings" value={formatCurrency(earnings)} hint="After 10% commission" icon={IndianRupee} />
-        <StatCard label="Commission paid" value={formatCurrency(commissionPaid)} hint="Fixora platform fee" icon={Star} />
+        <StatCard
+          label="Net earnings"
+          value={formatCurrency(earnings)}
+          hint="After 10% commission"
+          icon={IndianRupee}
+        />
+        <StatCard
+          label="Commission paid"
+          value={formatCurrency(commissionPaid)}
+          hint="Fixora platform fee"
+          icon={Star}
+        />
       </div>
 
       <Tabs defaultValue="availability" className="mt-10">
@@ -221,7 +235,9 @@ function ProviderDashboard() {
                   {b.notes && <p className="mt-2 text-sm text-muted-foreground">“{b.notes}”</p>}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-sm font-semibold">{formatCurrency(b.provider_earnings)} net</span>
+                  <span className="text-sm font-semibold">
+                    {formatCurrency(b.provider_earnings)} net
+                  </span>
                   {b.status === "pending" && (
                     <>
                       <Button
@@ -274,7 +290,8 @@ function ProviderDashboard() {
                       {s.category} · {s.location} · {formatCurrency(s.price)}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      ★ {Number(s.rating).toFixed(1)} ({s.review_count}) · {s.bookings_count} bookings
+                      ★ {Number(s.rating).toFixed(1)} ({s.review_count}) · {s.bookings_count}{" "}
+                      bookings
                       {s.featured ? " · Featured" : ""}
                     </p>
                   </div>
@@ -357,7 +374,12 @@ function AvailabilityManager() {
       .channel(`my-slots-${user.id}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "provider_slots", filter: `provider_id=eq.${user.id}` },
+        {
+          event: "*",
+          schema: "public",
+          table: "provider_slots",
+          filter: `provider_id=eq.${user.id}`,
+        },
         () => void queryClient.invalidateQueries({ queryKey: ["slots"] }),
       )
       .subscribe();
@@ -397,9 +419,13 @@ function AvailabilityManager() {
 
   const toggleSlot = useMutation({
     mutationFn: async (slot: SlotRow) => {
-      if (slot.status === "booked") throw new Error("This slot is booked — reject the booking first");
+      if (slot.status === "booked")
+        throw new Error("This slot is booked — reject the booking first");
       const next = slot.status === "available" ? "unavailable" : "available";
-      const { error } = await supabase.from("provider_slots").update({ status: next }).eq("id", slot.id);
+      const { error } = await supabase
+        .from("provider_slots")
+        .update({ status: next })
+        .eq("id", slot.id);
       if (error) throw error;
     },
     onSuccess: invalidate,
@@ -520,7 +546,11 @@ function AvailabilityManager() {
         <div className="mt-6 border-t border-border/60 pt-5">
           <h4 className="text-sm font-semibold">Add a custom slot</h4>
           <div className="mt-3 grid grid-cols-2 gap-3">
-            <Input type="time" value={customStart} onChange={(e) => setCustomStart(e.target.value)} />
+            <Input
+              type="time"
+              value={customStart}
+              onChange={(e) => setCustomStart(e.target.value)}
+            />
             <Input type="time" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} />
           </div>
           <Button
