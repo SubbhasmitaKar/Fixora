@@ -1,8 +1,4 @@
-# Fixora: Trusted Local Services
-
-Create a full-stack web application called "Fixora" — a scalable Local Services Booking Platform with real-world commercial potential.
-
------------------------------------
+ #Fixora: Trusted Local Services
 
 🧠 PROJECT OVERVIEW:
 
