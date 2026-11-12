@@ -196,7 +196,7 @@ function SignupForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [location, setLocation] = useState(LOCATIONS[0] ?? "Bengaluru");
+  const [location, setLocation] = useState(LOCATIONS[0] ?? "Angul");
   const [role, setRole] = useState<"user" | "provider">("user");
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);

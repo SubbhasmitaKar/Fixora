@@ -29,7 +29,28 @@ export const CATEGORIES: Category[] = [
 
 export const CATEGORY_NAMES = CATEGORIES.map((c) => c.name);
 
-export const LOCATIONS = ["Bengaluru", "Chennai", "Delhi", "Hyderabad", "Jaipur", "Mumbai", "Pune"];
+export const LOCATIONS = [
+  "Angul",
+  "Balangir",
+  "Balasore (Baleshwar)",
+  "Bargarh",
+  "Bhadrak",
+  "Cuttack",
+  "Dhenkanal",
+  "Ganjam",
+  "Jagatsinghapur",
+  "Jajpur",
+  "Kalahandi",
+  "Kendrapara",
+  "Kendujhar (Keonjhar)",
+  "Khordha",
+  "Koraput",
+  "Mayurbhanj",
+  "Nabarangpur",
+  "Puri",
+  "Sambalpur",
+  "Sundargarh",
+];
 
 export const TIME_SLOTS = [
   "08:00 - 10:00",

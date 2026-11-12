@@ -650,7 +650,9 @@ function NewServiceForm() {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState(CATEGORY_NAMES[0] ?? "Electrician");
   const [price, setPrice] = useState("999");
-  const [location, setLocation] = useState(profile?.location || LOCATIONS[0] || "Bengaluru");
+  const [location, setLocation] = useState(
+    LOCATIONS.find((district) => district === profile?.location) ?? LOCATIONS[0] ?? "Angul",
+  );
   const [description, setDescription] = useState("");
   const [featured, setFeatured] = useState(false);
 
