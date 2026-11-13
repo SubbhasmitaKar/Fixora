@@ -402,8 +402,10 @@ The repository's `.env.example` defines these variables:
 
 | Variable | Purpose | Exposure |
 |---|---|---|
+| `SUPABASE_PROJECT_ID` | Supabase project reference for server-side code. | Server environment |
 | `SUPABASE_URL` | Supabase project URL for server-side code. | Server environment |
 | `SUPABASE_PUBLISHABLE_KEY` | Supabase publishable key for server-side Supabase access. | Server environment |
+| `VITE_SUPABASE_PROJECT_ID` | Supabase project reference used by the Vite client bundle. | Public/client |
 | `VITE_SUPABASE_URL` | Supabase URL used by the Vite client bundle. | Public/client |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable key used by the browser client. | Public/client |
 | `SUPABASE_SERVICE_ROLE_KEY` | Privileged server-side Supabase key for trusted server operations. | **Server only — secret** |
@@ -447,17 +449,18 @@ The first migration also inserts sample service listings for demonstration. Thes
 
 The application is built with **TanStack Start**, so deployment must use a hosting environment compatible with its production server output/runtime. It should not automatically be treated as a static-only React/Vite website.
 
-The production deployment process should include:
+The repository is configured for Netlify using the official TanStack Start Vite adapter. Netlify builds the app with `npm run build` and publishes `dist/client`; the adapter packages the server-rendered routes as a Netlify function.
 
-1. Choose a host that supports the TanStack Start production output and its server runtime.
-2. Configure the required Supabase environment variables in the hosting dashboard.
-3. Keep `SUPABASE_SERVICE_ROLE_KEY` in server-side environment variables only.
-4. Build the project using `npm run build`.
-5. Deploy the generated application using the hosting provider's documented TanStack Start/Nitro deployment instructions.
-6. Add the deployed application URL to the Supabase Authentication allowed redirect URLs.
-7. Test sign-in, role-based access, database reads/writes, booking flows, and Realtime updates on the deployed site.
+To deploy from Git:
 
-**Hosting provider:** Not finalized yet. The project previously used Vercel, but a replacement host should be selected and tested before this README is updated with a live deployment URL.
+1. Import the GitHub repository into Netlify and use the repository root as the base directory.
+2. Set the install command to `npm ci` and ensure the build command is `npm run build`. The publish directory is `dist/client`.
+3. Configure `SUPABASE_PROJECT_ID`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_PROJECT_ID`, `VITE_SUPABASE_URL`, and `VITE_SUPABASE_PUBLISHABLE_KEY` in the Netlify environment settings.
+4. Keep `SUPABASE_SERVICE_ROLE_KEY` server-only; it is not required by the current application routes.
+5. Add the deployed application URL to Supabase Authentication's allowed redirect URLs.
+6. Test sign-in, role-based access, database reads/writes, booking flows, and Realtime updates on the deployed site.
+
+The Netlify site and its production environment variables still need to be configured in the Netlify dashboard.
 
 ---
 
