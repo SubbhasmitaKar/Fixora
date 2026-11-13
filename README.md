@@ -85,6 +85,7 @@ Access to protected application areas is controlled according to the signed-in u
 - Submit a rating and review for a service.
 
 ### Provider features
+- Upgrade an existing customer account to a provider account from the customer dashboard.
 - Access a provider dashboard.
 - Create and manage service listings.
 - Create and manage availability slots.
@@ -385,6 +386,8 @@ Add the credentials from your Supabase project. See [Environment Variables](#env
 ### 4. Configure the Supabase database
 
 Apply the SQL migrations in the `supabase/migrations/` directory to your Supabase project in chronological order. You can use the Supabase CLI or the Supabase SQL Editor.
+
+The self-service provider upgrade requires `20261114004000_allow_self_service_provider_upgrade.sql` to be applied so authenticated users can safely change their own customer role to provider.
 
 ### 5. Start the development server
 

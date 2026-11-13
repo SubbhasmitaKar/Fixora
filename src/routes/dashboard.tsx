@@ -2,7 +2,17 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { CalendarCheck, Clock, IndianRupee, Star, Navigation, X, RefreshCw } from "lucide-react";
+import {
+  ArrowRight,
+  BriefcaseBusiness,
+  CalendarCheck,
+  Clock,
+  IndianRupee,
+  Navigation,
+  RefreshCw,
+  Star,
+  X,
+} from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -63,8 +73,28 @@ const SELECT =
   "id, booking_date, time_slot, status, price, notes, created_at, service_id, provider_id, slot_id, user_lat, user_lng, provider_lat, provider_lng, eta_minutes, tracking_active, services(title, category, provider_name, location)";
 
 function UserDashboard() {
-  const { user, profile } = useAuth();
+  const { user, profile, role, refresh } = useAuth();
   const queryClient = useQueryClient();
+
+  const becomeProvider = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc("become_provider");
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      try {
+        await refresh();
+        toast.success("Provider access is enabled. Set up your profile and services next.");
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? `Provider access was enabled, but your account could not refresh: ${error.message}`
+            : "Provider access was enabled, but your account could not refresh. Reload the page.",
+        );
+      }
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
 
   const { data: bookings } = useQuery({
     queryKey: ["bookings", "mine", user?.id],
@@ -123,6 +153,46 @@ function UserDashboard() {
         title={`Hi ${profile?.name?.split(" ")[0] || "there"} 👋`}
         subtitle="Upcoming jobs, live tracking and one-tap rescheduling."
       />
+
+      {role === "user" && (
+        <Card className="glass mt-6 flex flex-col gap-4 rounded-2xl p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <span className="gradient-brand flex size-10 shrink-0 items-center justify-center rounded-xl text-primary-foreground">
+              <BriefcaseBusiness className="size-5" />
+            </span>
+            <div>
+              <h2 className="font-semibold">Become a Fixora provider</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Activate provider tools on this account, then add your profession, working hours,
+                and services.
+              </p>
+            </div>
+          </div>
+          <Button
+            disabled={becomeProvider.isPending}
+            className="gradient-brand shrink-0 border-0 text-primary-foreground"
+            onClick={() => becomeProvider.mutate()}
+          >
+            {becomeProvider.isPending ? "Setting up…" : "Become a provider"}
+          </Button>
+        </Card>
+      )}
+
+      {role === "provider" && (
+        <Card className="glass mt-6 flex flex-col gap-4 rounded-2xl p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="font-semibold">Your provider account is active</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Complete your provider profile, publish services, and manage your bookings.
+            </p>
+          </div>
+          <Button asChild className="gradient-brand shrink-0 border-0 text-primary-foreground">
+            <Link to="/provider">
+              Open provider console <ArrowRight className="size-4" />
+            </Link>
+          </Button>
+        </Card>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Total bookings" value={String(rows.length)} icon={CalendarCheck} />
