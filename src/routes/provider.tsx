@@ -79,6 +79,10 @@ type ProviderBooking = {
   provider_earnings: number;
   commission: number;
   notes: string | null;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+  service_address: string;
   user_lat: number | null;
   user_lng: number | null;
   provider_lat: number | null;
@@ -89,7 +93,7 @@ type ProviderBooking = {
 };
 
 const BOOKING_SELECT =
-  "id, booking_date, time_slot, status, price, provider_earnings, commission, notes, user_lat, user_lng, provider_lat, provider_lng, eta_minutes, tracking_active, services(title)";
+  "id, booking_date, time_slot, status, price, provider_earnings, commission, notes, customer_name, customer_email, customer_phone, service_address, user_lat, user_lng, provider_lat, provider_lng, eta_minutes, tracking_active, services(title)";
 
 function ProviderDashboard() {
   const { user, profile } = useAuth();
@@ -109,7 +113,11 @@ function ProviderDashboard() {
     },
   });
 
-  const { data: bookings } = useQuery({
+  const {
+    data: bookings,
+    isLoading: bookingsLoading,
+    error: bookingsError,
+  } = useQuery({
     queryKey: ["bookings", "provider", user?.id],
     enabled: Boolean(user),
     queryFn: async () => {
@@ -140,7 +148,12 @@ function ProviderDashboard() {
 
   const setStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
+      if (!user) throw new Error("Sign in first");
+      const { error } = await supabase
+        .from("bookings")
+        .update({ status })
+        .eq("id", id)
+        .eq("provider_id", user.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -216,7 +229,17 @@ function ProviderDashboard() {
         </TabsContent>
 
         <TabsContent value="requests" className="mt-5 space-y-3">
-          {rows.length === 0 && (
+          {bookingsError && (
+            <Card className="glass rounded-2xl border-destructive/40 p-5 text-sm text-destructive">
+              Could not load booking requests: {bookingsError.message}
+            </Card>
+          )}
+          {bookingsLoading && (
+            <Card className="glass rounded-2xl p-5 text-sm text-muted-foreground">
+              Loading booking requests…
+            </Card>
+          )}
+          {!bookingsLoading && !bookingsError && rows.length === 0 && (
             <Card className="glass rounded-2xl p-10 text-center text-sm text-muted-foreground">
               No booking requests yet. Publish slots so customers can book you.
             </Card>
@@ -227,11 +250,34 @@ function ProviderDashboard() {
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="font-semibold">{b.services?.title ?? "Service"}</h3>
-                    <StatusBadge status={b.status} />
+                    <StatusBadge
+                      status={b.status}
+                      {...(b.status === "accepted" ? { label: "Confirmed" } : {})}
+                    />
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">
                     {new Date(`${b.booking_date}T00:00:00`).toDateString()} · {b.time_slot}
                   </p>
+                  <div className="mt-2 space-y-1 text-sm">
+                    <p className="font-medium">{b.customer_name || "Customer"}</p>
+                    {b.customer_phone && (
+                      <p>
+                        Phone:{" "}
+                        <a className="text-primary underline" href={`tel:${b.customer_phone}`}>
+                          {b.customer_phone}
+                        </a>
+                      </p>
+                    )}
+                    {b.customer_email && (
+                      <p>
+                        Email:{" "}
+                        <a className="text-primary underline" href={`mailto:${b.customer_email}`}>
+                          {b.customer_email}
+                        </a>
+                      </p>
+                    )}
+                    {b.service_address && <p>Address: {b.service_address}</p>}
+                  </div>
                   {b.notes && <p className="mt-2 text-sm text-muted-foreground">“{b.notes}”</p>}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -343,15 +389,48 @@ function ProviderDashboard() {
 }
 
 function AvailabilityManager() {
-  const { user } = useAuth();
+  const { user, profile, refresh } = useAuth();
   const queryClient = useQueryClient();
   const dates = useMemo(() => upcomingDates(14), []);
   const [date, setDate] = useState(todayISO());
-  const [from, setFrom] = useState("09:00");
-  const [to, setTo] = useState("18:00");
-  const [duration, setDuration] = useState("60");
+  const [profession, setProfession] = useState(
+    profile?.profession || CATEGORY_NAMES[0] || "Electrician",
+  );
+  const [workingDays, setWorkingDays] = useState<number[]>(
+    profile?.working_days?.length ? profile.working_days : [1, 2, 3, 4, 5],
+  );
+  const [from, setFrom] = useState(profile?.working_hours_start?.slice(0, 5) || "09:00");
+  const [to, setTo] = useState(profile?.working_hours_end?.slice(0, 5) || "18:00");
+  const [duration, setDuration] = useState(String(profile?.slot_duration_minutes || 60));
   const [customStart, setCustomStart] = useState("10:00");
   const [customEnd, setCustomEnd] = useState("11:00");
+  const weekdays = [
+    { value: 0, label: "Sun" },
+    { value: 1, label: "Mon" },
+    { value: 2, label: "Tue" },
+    { value: 3, label: "Wed" },
+    { value: 4, label: "Thu" },
+    { value: 5, label: "Fri" },
+    { value: 6, label: "Sat" },
+  ];
+
+  useEffect(() => {
+    if (!profile) return;
+    setProfession(profile.profession || CATEGORY_NAMES[0] || "Electrician");
+    setWorkingDays(profile.working_days?.length ? profile.working_days : [1, 2, 3, 4, 5]);
+    setFrom(profile.working_hours_start?.slice(0, 5) || "09:00");
+    setTo(profile.working_hours_end?.slice(0, 5) || "18:00");
+    setDuration(String(profile.slot_duration_minutes || 60));
+  }, [profile]);
+  const savedWorkingDays = profile?.working_days ?? [];
+  const scheduleIsSaved =
+    Boolean(profile) &&
+    profile?.profession === profession &&
+    [...workingDays].sort((a, b) => a - b).join(",") ===
+      [...savedWorkingDays].sort((a, b) => a - b).join(",") &&
+    profile?.working_hours_start.slice(0, 5) === from &&
+    profile?.working_hours_end.slice(0, 5) === to &&
+    profile?.slot_duration_minutes === Number(duration);
 
   const { data: slots } = useQuery({
     queryKey: ["slots", user?.id, date],
@@ -392,9 +471,37 @@ function AvailabilityManager() {
     void queryClient.invalidateQueries({ queryKey: ["slots"] });
   };
 
+  const saveSchedule = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error("Sign in first");
+      if (workingDays.length === 0) throw new Error("Select at least one working day");
+      if (to <= from) throw new Error("End time must be after start time");
+      if (generateSlots(from, to, Number(duration)).length === 0)
+        throw new Error("Working hours must fit at least one slot");
+      const { error } = await supabase.from("profiles").upsert(
+        {
+          id: user.id,
+          profession,
+          working_days: workingDays,
+          working_hours_start: from,
+          working_hours_end: to,
+          slot_duration_minutes: Number(duration),
+        },
+        { onConflict: "id" },
+      );
+      if (error) throw error;
+      await refresh();
+    },
+    onSuccess: () => toast.success("Provider profile and working schedule saved"),
+    onError: (error: Error) => toast.error(error.message),
+  });
+
   const addSlots = useMutation({
     mutationFn: async (rows: { start_time: string; end_time: string }[]) => {
       if (!user) throw new Error("Sign in first");
+      if (!scheduleIsSaved) throw new Error("Save your working schedule before publishing slots");
+      if (!savedWorkingDays.includes(new Date(`${date}T00:00:00`).getDay()))
+        throw new Error("This date is outside your saved working days");
       if (rows.length === 0) throw new Error("Nothing to add — check your hours");
       const existing = new Set((slots ?? []).map((s) => hhmm(s.start_time)));
       const fresh = rows.filter((r) => !existing.has(r.start_time));
@@ -508,8 +615,49 @@ function AvailabilityManager() {
 
       <Card className="glass h-fit rounded-2xl p-6">
         <h3 className="flex items-center gap-2 font-semibold">
-          <Plus className="size-4" /> Working hours
+          <Plus className="size-4" /> Provider profile &amp; working hours
         </h3>
+        <div className="mt-4 space-y-2">
+          <Label>Profession</Label>
+          <Select value={profession} onValueChange={setProfession}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {CATEGORY_NAMES.map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="mt-4 space-y-2">
+          <Label>Working days</Label>
+          <div className="grid grid-cols-4 gap-2">
+            {weekdays.map((day) => {
+              const selected = workingDays.includes(day.value);
+              return (
+                <Button
+                  key={day.value}
+                  type="button"
+                  size="sm"
+                  variant={selected ? "default" : "outline"}
+                  aria-pressed={selected}
+                  onClick={() =>
+                    setWorkingDays((current) =>
+                      selected
+                        ? current.filter((value) => value !== day.value)
+                        : [...current, day.value].sort((a, b) => a - b),
+                    )
+                  }
+                >
+                  {day.label}
+                </Button>
+              );
+            })}
+          </div>
+        </div>
         <div className="mt-4 grid grid-cols-2 gap-3">
           <div className="space-y-2">
             <Label htmlFor="from">From</Label>
@@ -537,10 +685,18 @@ function AvailabilityManager() {
         </div>
         <Button
           className="gradient-brand mt-4 w-full border-0 text-primary-foreground"
-          disabled={addSlots.isPending}
+          disabled={addSlots.isPending || saveSchedule.isPending || !scheduleIsSaved}
           onClick={() => addSlots.mutate(generateSlots(from, to, Number(duration)))}
         >
           Generate slots
+        </Button>
+        <Button
+          variant="outline"
+          className="mt-3 w-full"
+          disabled={saveSchedule.isPending}
+          onClick={() => saveSchedule.mutate()}
+        >
+          {saveSchedule.isPending ? "Saving…" : "Save profile & working schedule"}
         </Button>
 
         <div className="mt-6 border-t border-border/60 pt-5">

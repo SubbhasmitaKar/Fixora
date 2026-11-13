@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2, Sparkles, User, Wrench } from "lucide-react";
+import { Eye, EyeOff, Loader2, Sparkles, User, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -131,6 +131,7 @@ function GoogleButton() {
 function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
@@ -164,22 +165,38 @@ function LoginForm() {
         <Label htmlFor="login-email">Email</Label>
         <Input
           id="login-email"
+          name="email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
           autoComplete="email"
+          required
         />
       </div>
       <div className="space-y-2">
         <Label htmlFor="login-password">Password</Label>
-        <Input
-          id="login-password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          autoComplete="current-password"
-        />
+        <div className="relative">
+          <Input
+            id="login-password"
+            name="password"
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+            className="pr-10"
+            required
+          />
+          <button
+            type="button"
+            className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground"
+            onClick={() => setShowPassword((visible) => !visible)}
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-pressed={showPassword}
+          >
+            {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+          </button>
+        </div>
       </div>
       <Button
         type="submit"
@@ -196,6 +213,7 @@ function SignupForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [location, setLocation] = useState(LOCATIONS[0] ?? "Angul");
   const [role, setRole] = useState<"user" | "provider">("user");
   const [busy, setBusy] = useState(false);
@@ -296,23 +314,39 @@ function SignupForm() {
         <Label htmlFor="signup-email">Email</Label>
         <Input
           id="signup-email"
+          name="email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
           autoComplete="email"
+          required
         />
       </div>
       <div className="space-y-2">
         <Label htmlFor="signup-password">Password</Label>
-        <Input
-          id="signup-password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          autoComplete="new-password"
-          placeholder="At least 8 characters"
-        />
+        <div className="relative">
+          <Input
+            id="signup-password"
+            name="password"
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="new-password"
+            placeholder="At least 8 characters"
+            className="pr-10"
+            required
+          />
+          <button
+            type="button"
+            className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground"
+            onClick={() => setShowPassword((visible) => !visible)}
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-pressed={showPassword}
+          >
+            {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+          </button>
+        </div>
       </div>
       <div className="space-y-2">
         <Label>City</Label>

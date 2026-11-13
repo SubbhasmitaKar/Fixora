@@ -427,6 +427,7 @@ supabase/migrations/
 They create the application schema, role definitions, row-level security policies, database functions, triggers, indexes, provider availability slots, and Realtime publication settings.
 
 Apply all migrations to the Supabase project connected to the application. Confirm that the required tables and policies exist before testing the application.
+The provider profile and booking contact fields in the latest migration must be applied before deploying this version; the provider dashboard reads the saved schedule and booking contact snapshots from those columns.
 
 The first migration also inserts sample service listings for demonstration. These are sample records, not proof of real provider verification or real completed transactions.
 

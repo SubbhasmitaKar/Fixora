@@ -1,5 +1,14 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { Session, User } from "@supabase/supabase-js";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 export type Role = "user" | "provider" | "admin";
@@ -10,6 +19,11 @@ export type Profile = {
   email: string;
   location: string;
   phone: string | null;
+  profession: string;
+  working_days: number[];
+  working_hours_start: string;
+  working_hours_end: string;
+  slot_duration_minutes: number;
 };
 
 type AuthValue = {
@@ -29,42 +43,72 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [role, setRole] = useState<Role | null>(null);
   const [loading, setLoading] = useState(true);
+  const authRevision = useRef(0);
 
   const loadDetails = useCallback(async (userId: string) => {
-    const [{ data: p }, { data: r }] = await Promise.all([
+    const [profileResult, roleResult] = await Promise.all([
       supabase
         .from("profiles")
-        .select("id, name, email, location, phone")
+        .select(
+          "id, name, email, location, phone, profession, working_days, working_hours_start, working_hours_end, slot_duration_minutes",
+        )
         .eq("id", userId)
         .maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", userId).limit(1).maybeSingle(),
     ]);
-    setProfile((p as Profile) ?? null);
-    setRole(((r?.role as Role) ?? "user") as Role);
+    if (profileResult.error) throw profileResult.error;
+    if (roleResult.error) throw roleResult.error;
+
+    return {
+      profile: (profileResult.data as Profile | null) ?? null,
+      role: (roleResult.data?.role as Role | undefined) ?? "user",
+    };
   }, []);
 
   useEffect(() => {
+    let active = true;
     const { data: sub } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      const revision = ++authRevision.current;
       setSession(nextSession);
-      if (nextSession?.user) {
-        setTimeout(() => void loadDetails(nextSession.user.id), 0);
-      } else {
+      if (!nextSession?.user) {
         setProfile(null);
         setRole(null);
+        setLoading(false);
+        return;
       }
+
+      setLoading(true);
+      setTimeout(() => {
+        void loadDetails(nextSession.user.id)
+          .then((details) => {
+            if (!active || revision !== authRevision.current) return;
+            setProfile(details.profile);
+            setRole(details.role);
+          })
+          .catch((error: unknown) => {
+            if (!active || revision !== authRevision.current) return;
+            setProfile(null);
+            setRole(null);
+            toast.error(error instanceof Error ? error.message : "Could not load your account.");
+          })
+          .finally(() => {
+            if (active && revision === authRevision.current) setLoading(false);
+          });
+      }, 0);
     });
 
-    void supabase.auth.getSession().then(async ({ data }) => {
-      setSession(data.session);
-      if (data.session?.user) await loadDetails(data.session.user.id);
-      setLoading(false);
-    });
-
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      active = false;
+      authRevision.current += 1;
+      sub.subscription.unsubscribe();
+    };
   }, [loadDetails]);
 
   const refresh = useCallback(async () => {
-    if (session?.user) await loadDetails(session.user.id);
+    if (!session?.user) return;
+    const details = await loadDetails(session.user.id);
+    setProfile(details.profile);
+    setRole(details.role);
   }, [session, loadDetails]);
 
   const signOut = useCallback(async () => {

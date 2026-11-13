@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { ArrowLeft, CalendarDays, Clock, Loader2, LocateFixed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
@@ -41,7 +42,7 @@ export const Route = createFileRoute("/book/$serviceId")({
 
 function BookingPage() {
   const { serviceId } = Route.useParams();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -49,6 +50,8 @@ function BookingPage() {
   const [date, setDate] = useState(todayISO());
   const [slot, setSlot] = useState<SlotRow | null>(null);
   const [notes, setNotes] = useState("");
+  const [customerPhone, setCustomerPhone] = useState(profile?.phone ?? "");
+  const [serviceAddress, setServiceAddress] = useState("");
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   const { data: service } = useQuery({
@@ -132,12 +135,25 @@ function BookingPage() {
     mutationFn: async () => {
       if (!user) throw new Error("Please sign in first");
       if (!slot) throw new Error("Choose a time slot");
+      const phone = customerPhone.trim();
+      const phoneDigits = phone.match(/\d/g)?.length ?? 0;
+      if (!/^\+?[0-9\s().-]{7,25}$/.test(phone) || phoneDigits < 7 || phoneDigits > 15)
+        throw new Error("Enter a valid contact phone number");
+      const address = serviceAddress.trim();
+      if (address.length < 5 || address.length > 300)
+        throw new Error("Enter a service address between 5 and 300 characters");
       const { error } = await supabase.from("bookings").insert({
         user_id: user.id,
         service_id: serviceId,
         slot_id: slot.id,
         booking_date: slot.slot_date,
         time_slot: slotLabel(slot),
+        customer_name:
+          profile?.name ||
+          (typeof user.user_metadata["name"] === "string" ? user.user_metadata["name"] : ""),
+        customer_email: user.email ?? "",
+        customer_phone: phone,
+        service_address: address,
         notes: notes.trim().slice(0, 500) || null,
         user_lat: coords?.lat ?? null,
         user_lng: coords?.lng ?? null,
@@ -215,8 +231,40 @@ function BookingPage() {
 
           <Separator className="my-6" />
 
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="booking-phone">Contact phone</Label>
+              <Input
+                id="booking-phone"
+                name="tel"
+                type="tel"
+                autoComplete="tel"
+                value={customerPhone}
+                onChange={(event) => setCustomerPhone(event.target.value)}
+                maxLength={25}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="service-address">Service address</Label>
+              <Textarea
+                id="service-address"
+                name="street-address"
+                autoComplete="street-address"
+                rows={2}
+                maxLength={300}
+                value={serviceAddress}
+                onChange={(event) => setServiceAddress(event.target.value)}
+                placeholder="House/flat, street, locality, city"
+                required
+              />
+            </div>
+          </div>
+
+          <Separator className="my-6" />
+
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes for the provider (optional)</Label>
+            <Label htmlFor="notes">Other notes for the provider (optional)</Label>
             <Textarea
               id="notes"
               rows={3}

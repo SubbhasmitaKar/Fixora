@@ -10,10 +10,10 @@ const STATUS_STYLES: Record<string, string> = {
   cancelled: "bg-muted text-muted-foreground border-border",
 };
 
-export function StatusBadge({ status }: { status: string }) {
+export function StatusBadge({ status, label }: { status: string; label?: string }) {
   return (
     <Badge variant="outline" className={STATUS_STYLES[status] ?? ""}>
-      {status.charAt(0).toUpperCase() + status.slice(1)}
+      {label ?? status.charAt(0).toUpperCase() + status.slice(1)}
     </Badge>
   );
 }

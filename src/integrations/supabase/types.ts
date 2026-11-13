@@ -13,6 +13,9 @@ export type Database = {
           booking_date: string;
           commission: number;
           created_at: string;
+          customer_email: string;
+          customer_name: string;
+          customer_phone: string;
           eta_minutes: number | null;
           id: string;
           notes: string | null;
@@ -22,6 +25,7 @@ export type Database = {
           provider_lat: number | null;
           provider_lng: number | null;
           service_id: string;
+          service_address: string;
           slot_id: string | null;
           status: string;
           time_slot: string;
@@ -35,6 +39,9 @@ export type Database = {
           booking_date: string;
           commission?: number;
           created_at?: string;
+          customer_email?: string;
+          customer_name?: string;
+          customer_phone?: string;
           eta_minutes?: number | null;
           id?: string;
           notes?: string | null;
@@ -44,6 +51,7 @@ export type Database = {
           provider_lat?: number | null;
           provider_lng?: number | null;
           service_id: string;
+          service_address?: string;
           slot_id?: string | null;
           status?: string;
           time_slot: string;
@@ -57,6 +65,9 @@ export type Database = {
           booking_date?: string;
           commission?: number;
           created_at?: string;
+          customer_email?: string;
+          customer_name?: string;
+          customer_phone?: string;
           eta_minutes?: number | null;
           id?: string;
           notes?: string | null;
@@ -66,6 +77,7 @@ export type Database = {
           provider_lat?: number | null;
           provider_lng?: number | null;
           service_id?: string;
+          service_address?: string;
           slot_id?: string | null;
           status?: string;
           time_slot?: string;
@@ -100,6 +112,11 @@ export type Database = {
           location: string;
           name: string;
           phone: string | null;
+          profession: string;
+          slot_duration_minutes: number;
+          working_days: number[];
+          working_hours_end: string;
+          working_hours_start: string;
         };
         Insert: {
           created_at?: string;
@@ -108,6 +125,11 @@ export type Database = {
           location?: string;
           name?: string;
           phone?: string | null;
+          profession?: string;
+          slot_duration_minutes?: number;
+          working_days?: number[];
+          working_hours_end?: string;
+          working_hours_start?: string;
         };
         Update: {
           created_at?: string;
@@ -116,6 +138,11 @@ export type Database = {
           location?: string;
           name?: string;
           phone?: string | null;
+          profession?: string;
+          slot_duration_minutes?: number;
+          working_days?: number[];
+          working_hours_end?: string;
+          working_hours_start?: string;
         };
         Relationships: [];
       };
