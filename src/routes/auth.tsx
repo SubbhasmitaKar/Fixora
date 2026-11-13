@@ -45,6 +45,7 @@ const nameSchema = z.string().trim().min(2, "Enter your full name").max(80);
 function AuthPage() {
   const navigate = useNavigate();
   const { user, role, loading } = useAuth();
+  const [activeTab, setActiveTab] = useState("login");
 
   useEffect(() => {
     if (!loading && user && role) {
@@ -69,7 +70,7 @@ function AuthPage() {
         </div>
 
         <Card className="glass rounded-2xl p-6">
-          <Tabs defaultValue="login">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Log in</TabsTrigger>
               <TabsTrigger value="signup">Sign up</TabsTrigger>
@@ -78,7 +79,7 @@ function AuthPage() {
               <LoginForm />
             </TabsContent>
             <TabsContent value="signup" className="mt-5">
-              <SignupForm />
+              <SignupForm onLogin={() => setActiveTab("login")} />
             </TabsContent>
           </Tabs>
 
@@ -209,7 +210,7 @@ function LoginForm() {
   );
 }
 
-function SignupForm() {
+function SignupForm({ onLogin }: { onLogin: () => void }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -217,7 +218,7 @@ function SignupForm() {
   const [location, setLocation] = useState(LOCATIONS[0] ?? "Angul");
   const [role, setRole] = useState<"user" | "provider">("user");
   const [busy, setBusy] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [signupStatus, setSignupStatus] = useState<"confirmation" | "existing" | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -251,22 +252,44 @@ function SignupForm() {
       toast.error(error.message);
       return;
     }
+    if (!data.session && data.user?.identities?.length === 0) {
+      setSignupStatus("existing");
+      return;
+    }
     if (!data.session) {
-      setSent(true);
+      setSignupStatus("confirmation");
       toast.success("Check your email to confirm your account");
       return;
     }
     toast.success("Account created!");
   }
 
-  if (sent) {
+  if (signupStatus === "existing") {
+    return (
+      <div className="rounded-xl border border-border/60 p-5 text-center text-sm">
+        <p className="font-semibold">This email may already be registered</p>
+        <p className="mt-1 text-muted-foreground">
+          Try logging in with this email. If you don’t have an account yet, you can sign up with a
+          different email address.
+        </p>
+        <Button type="button" className="mt-4 w-full" onClick={onLogin}>
+          Go to log in
+        </Button>
+      </div>
+    );
+  }
+
+  if (signupStatus === "confirmation") {
     return (
       <div className="rounded-xl border border-border/60 p-5 text-center text-sm">
         <p className="font-semibold">Confirm your email</p>
         <p className="mt-1 text-muted-foreground">
-          We sent a confirmation link to <span className="font-medium">{email}</span>. Click it to
-          activate your Fixora account.
+          If this is a new account, check <span className="font-medium">{email}</span> (including
+          spam) for a confirmation link. If you already have an account, log in instead.
         </p>
+        <Button type="button" variant="outline" className="mt-4 w-full" onClick={onLogin}>
+          Go to log in
+        </Button>
       </div>
     );
   }
