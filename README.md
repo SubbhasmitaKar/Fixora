@@ -458,7 +458,7 @@ To deploy from Git:
 2. Set the install command to `npm ci` and ensure the build command is `npm run build`. The publish directory is `dist/client`.
 3. Configure `SUPABASE_PROJECT_ID`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_PROJECT_ID`, `VITE_SUPABASE_URL`, and `VITE_SUPABASE_PUBLISHABLE_KEY` in the Netlify environment settings.
 4. Keep `SUPABASE_SERVICE_ROLE_KEY` server-only; it is not required by the current application routes.
-5. Add the deployed application URL to Supabase Authentication's allowed redirect URLs.
+5. Add the deployed application URL and its auth paths (for example, `https://fixora-connect.netlify.app/**`) to Supabase Authentication's allowed redirect URLs. Password recovery returns to `/auth?mode=reset`.
 6. Test sign-in, role-based access, database reads/writes, booking flows, and Realtime updates on the deployed site.
 
 The Netlify site and its production environment variables still need to be configured in the Netlify dashboard.

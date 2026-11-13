@@ -46,15 +46,31 @@ function AuthPage() {
   const navigate = useNavigate();
   const { user, role, loading } = useAuth();
   const [activeTab, setActiveTab] = useState("login");
+  const [isPasswordReset, setIsPasswordReset] = useState(false);
+  const [checkingRecoveryLink, setCheckingRecoveryLink] = useState(true);
 
   useEffect(() => {
-    if (!loading && user && role) {
+    const resetMode = new URLSearchParams(window.location.search).get("mode") === "reset";
+    setIsPasswordReset(resetMode);
+    setCheckingRecoveryLink(false);
+  }, []);
+
+  useEffect(() => {
+    if (!checkingRecoveryLink && !isPasswordReset && !loading && user && role) {
       void navigate({
         to: role === "provider" ? "/provider" : role === "admin" ? "/admin" : "/dashboard",
         replace: true,
       });
     }
-  }, [user, role, loading, navigate]);
+  }, [checkingRecoveryLink, isPasswordReset, user, role, loading, navigate]);
+
+  function continueAfterPasswordReset() {
+    setIsPasswordReset(false);
+    void navigate({
+      to: role === "provider" ? "/provider" : role === "admin" ? "/admin" : "/dashboard",
+      replace: true,
+    });
+  }
 
   return (
     <div className="aurora relative min-h-[80vh]">
@@ -70,20 +86,26 @@ function AuthPage() {
         </div>
 
         <Card className="glass rounded-2xl p-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Log in</TabsTrigger>
-              <TabsTrigger value="signup">Sign up</TabsTrigger>
-            </TabsList>
-            <TabsContent value="login" className="mt-5">
-              <LoginForm />
-            </TabsContent>
-            <TabsContent value="signup" className="mt-5">
-              <SignupForm onLogin={() => setActiveTab("login")} />
-            </TabsContent>
-          </Tabs>
+          {isPasswordReset ? (
+            <PasswordUpdateForm onComplete={continueAfterPasswordReset} />
+          ) : (
+            <>
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="login">Log in</TabsTrigger>
+                  <TabsTrigger value="signup">Sign up</TabsTrigger>
+                </TabsList>
+                <TabsContent value="login" className="mt-5">
+                  <LoginForm />
+                </TabsContent>
+                <TabsContent value="signup" className="mt-5">
+                  <SignupForm onLogin={() => setActiveTab("login")} />
+                </TabsContent>
+              </Tabs>
 
-          <GoogleButton />
+              <GoogleButton />
+            </>
+          )}
         </Card>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
@@ -134,6 +156,7 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [forgotPassword, setForgotPassword] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -158,6 +181,12 @@ function LoginForm() {
       return;
     }
     toast.success("Welcome back!");
+  }
+
+  if (forgotPassword) {
+    return (
+      <PasswordResetRequestForm initialEmail={email} onBack={() => setForgotPassword(false)} />
+    );
   }
 
   return (
@@ -199,12 +228,203 @@ function LoginForm() {
           </button>
         </div>
       </div>
+      <div className="-mt-2 text-right">
+        <button
+          type="button"
+          className="text-sm text-primary underline-offset-4 hover:underline"
+          onClick={() => setForgotPassword(true)}
+        >
+          Forgot password?
+        </button>
+      </div>
       <Button
         type="submit"
         disabled={busy}
         className="gradient-brand w-full border-0 text-primary-foreground"
       >
         {busy ? <Loader2 className="size-4 animate-spin" /> : null} Log in
+      </Button>
+    </form>
+  );
+}
+
+function PasswordResetRequestForm({
+  initialEmail,
+  onBack,
+}: {
+  initialEmail: string;
+  onBack: () => void;
+}) {
+  const [email, setEmail] = useState(initialEmail);
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const parsedEmail = emailSchema.safeParse(email);
+    if (!parsedEmail.success) {
+      toast.error(parsedEmail.error.issues[0]?.message);
+      return;
+    }
+
+    setBusy(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(parsedEmail.data, {
+      redirectTo: `${window.location.origin}/auth?mode=reset`,
+    });
+    setBusy(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setSent(true);
+  }
+
+  if (sent) {
+    return (
+      <div className="space-y-4 rounded-xl border border-border/60 p-5 text-center text-sm">
+        <div>
+          <p className="font-semibold">Check your email</p>
+          <p className="mt-1 text-muted-foreground">
+            If an account exists for <span className="font-medium">{email}</span>, we sent a
+            password reset link. Check your spam folder too.
+          </p>
+        </div>
+        <Button type="button" variant="outline" className="w-full" onClick={onBack}>
+          Back to log in
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={onSubmit} className="space-y-4">
+      <div>
+        <h2 className="font-semibold">Reset your password</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Enter your account email and we’ll send you a reset link.
+        </p>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="reset-email">Email</Label>
+        <Input
+          id="reset-email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          required
+        />
+      </div>
+      <Button type="submit" disabled={busy} className="w-full">
+        {busy ? <Loader2 className="size-4 animate-spin" /> : null}
+        Send reset link
+      </Button>
+      <Button type="button" variant="ghost" className="w-full" onClick={onBack}>
+        Back to log in
+      </Button>
+    </form>
+  );
+}
+
+function PasswordUpdateForm({ onComplete }: { onComplete: () => void }) {
+  const { user } = useAuth();
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [updated, setUpdated] = useState(false);
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!user) {
+      toast.error("This password reset link is invalid or has expired. Request a new one.");
+      return;
+    }
+
+    const parsedPassword = passwordSchema.safeParse(password);
+    if (!parsedPassword.success) {
+      toast.error(parsedPassword.error.issues[0]?.message);
+      return;
+    }
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    setBusy(true);
+    const { error } = await supabase.auth.updateUser({ password: parsedPassword.data });
+    setBusy(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setUpdated(true);
+    toast.success("Your password has been updated.");
+  }
+
+  if (updated) {
+    return (
+      <div className="space-y-4 rounded-xl border border-border/60 p-5 text-center text-sm">
+        <div>
+          <p className="font-semibold">Password updated</p>
+          <p className="mt-1 text-muted-foreground">
+            Your password has been changed. Continue to your Fixora account.
+          </p>
+        </div>
+        <Button type="button" className="w-full" onClick={onComplete}>
+          Continue to Fixora
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={onSubmit} className="space-y-4">
+      <div>
+        <h2 className="font-semibold">Choose a new password</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Use at least 8 characters.</p>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="new-password">New password</Label>
+        <div className="relative">
+          <Input
+            id="new-password"
+            name="password"
+            type={showPassword ? "text" : "password"}
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="pr-10"
+            required
+          />
+          <button
+            type="button"
+            className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground"
+            onClick={() => setShowPassword((visible) => !visible)}
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-pressed={showPassword}
+          >
+            {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+          </button>
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="confirm-password">Confirm new password</Label>
+        <Input
+          id="confirm-password"
+          name="confirm-password"
+          type={showPassword ? "text" : "password"}
+          autoComplete="new-password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          required
+        />
+      </div>
+      <Button type="submit" disabled={busy} className="w-full">
+        {busy ? <Loader2 className="size-4 animate-spin" /> : null}
+        Update password
       </Button>
     </form>
   );
